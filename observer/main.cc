@@ -7,6 +7,18 @@
 
 enum class EventType : uint8_t { Info = 0, Error };
 
+std::string eventTypeDescription(EventType type) {
+  switch (type) {
+  case EventType::Error:
+    return "Error";
+  case EventType::Info:
+    return "Info";
+  default:
+    std::cout << "Unknown EventType: " << (int)type << "\n";
+    return "";
+  }
+}
+
 class Event {
 public:
   EventType type{EventType::Error};
@@ -26,8 +38,8 @@ public:
 
   bool update(const Event &e) override {
     // write to logFileName
-    std::cout << "Error info about " << e.data
-              << " has been successfully written to the log file\n";
+    std::cout << "Error [" << e.data
+              << "] has been successfully written to the log file\n";
     return true;
   }
 
@@ -44,8 +56,8 @@ public:
 
   bool update(const Event &e) override {
     // Sent to email
-    std::cout << "Error info about " << e.data
-              << " has been successfully send to email\n";
+    std::cout << "Error [" << e.data
+              << "] has been successfully send to email\n";
     return true;
   }
 
@@ -69,19 +81,20 @@ public:
     } else {
       it->second.push_back(obserser);
     }
-    std::cout << "New obs has been successfully added\n";
+    std::cout << "New observer has been successfully added\n";
   }
+
   void unsubscribe(EventType type, const std::shared_ptr<Observer> &obserser) {
     auto it = _observers.find(type);
     if (it == _observers.end()) {
       std::cout
           << "There are no any observers subscribed on this type of events: "
-          << (int)type << "\n";
+          << eventTypeDescription(type) << "\n";
     } else {
       auto &v = it->second;
       v.erase(find(v.begin(), v.end(), obserser));
     }
-    std::cout << "New obs has been successfully removed\n";
+    std::cout << "Observer has been successfully removed\n";
   }
 
   bool notify(EventType type, const Event &e) {
@@ -89,7 +102,7 @@ public:
     if (it == _observers.end()) {
       std::cout
           << "There are no any observers subscribed on this type of events: "
-          << (int)type << "\n";
+          << eventTypeDescription(type) << "\n";
       return false;
     } else {
       for (auto &obs : it->second) {
@@ -109,13 +122,15 @@ int main() {
 
   const auto flo = std::make_shared<FileLoggerObserver>();
   const auto eso = std::make_shared<EmailSenderObserver>();
+
   eg.subscribe(EventType::Error, flo);
-  eg.generateEvent(EventType::Error, "BDYSH");
+  eg.generateEvent(EventType::Error, "Error: {Reason: BDYSH}");
 
   eg.subscribe(EventType::Error, eso);
-  eg.generateEvent(EventType::Error, "BDYSH2");
+  eg.generateEvent(EventType::Error, "Error: {Reason: BDYSH2}");
 
   eg.unsubscribe(EventType::Error, flo);
+  eg.unsubscribe(EventType::Info, flo);
 
-  eg.generateEvent(EventType::Error, "BDYSH3");
+  eg.generateEvent(EventType::Error, "Error: {Reason: BDYSH3}");
 }
