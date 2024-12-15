@@ -43,39 +43,43 @@ class FileLoggerObserver : public Observer
 {
     public:
         FileLoggerObserver() = default;
+        FileLoggerObserver(const std::string& logFile) : _logFile(logFile) {};
         ~FileLoggerObserver() {}
 
         bool update(const Event& e) override
         {
             // write to logFileName
             std::cout << "Error [" << e.data
-                      << "] has been successfully written to the log file\n";
+                      << "] has been successfully written to the log file: " << _logFile
+                      << "\n";
             return true;
         }
 
-        void set_log(const std::string& fpath) { logFileName = fpath; }
+        void setLogFile(const std::string& logFile) { _logFile = logFile; }
 
     private:
-        std::string logFileName {};
+        std::string _logFile { "program.log" };
 };
 
 class EmailSenderObserver : public Observer
 {
     public:
         EmailSenderObserver() = default;
+        EmailSenderObserver(const std::string& email) : _email(email) {};
         ~EmailSenderObserver() {}
 
         bool update(const Event& e) override
         {
             // Sent to email
-            std::cout << "Error [" << e.data << "] has been successfully send to email\n";
+            std::cout << "Error [" << e.data
+                      << "] has been successfully send to email: " << _email << "\n";
             return true;
         }
 
-        void set_email(const std::string& email) { emailAddr = email; }
+        void setEmail(const std::string& email) { _email = email; }
 
     private:
-        std::string emailAddr {};
+        std::string _email { "example@email.com" };
 };
 
 class EventManager
@@ -115,7 +119,8 @@ class EventManager
                 auto& v = it->second;
                 v.erase(find(v.begin(), v.end(), obserser));
             }
-            std::cout << "Observer has been successfully removed\n";
+            std::cout << "Observer has been successfully removed. Now there is (are) "
+                      << it->second.size() << " observer(s)\n";
         }
 
         bool notify(EventType type, const Event& e)
